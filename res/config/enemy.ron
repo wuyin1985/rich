@@ -1,0 +1,39 @@
+[
+(
+    name:"enemy1",
+    property:(
+        atk:33,
+        def:11,
+    ),
+    speed:0,
+    type_data : Rain(
+        water:1,
+        weight:2,
+    )
+),
+(
+    name:"enemy2",
+    property:(
+        atk:1,
+        def:0,
+    ),
+    speed:30,
+    type_data : Thunder(
+        light:"halo",
+    )
+),
+(
+    name:"enemy3",
+    property:(
+        atk:1,
+        def:0,
+    ),
+    speed:30,
+    type_data : Land(
+        data:LandData(
+            size:100,
+            color:3.0,
+        )
+    )
+),
+]

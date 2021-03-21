@@ -1,0 +1,17 @@
+[package]
+name = "assets"
+version = "0.1.0"
+authors = ["yin <wuyin@outlook.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-std = "1.9.0"
+async-trait = "0.1.42"
+ahash = "0.7"
+anyhow = "1.0"
+thiserror = "1.0.23"
+futures = "0.3"
+
+base = {path = "../base"}
