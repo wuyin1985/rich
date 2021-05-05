@@ -3,11 +3,14 @@ use super::{
 };
 use std::sync::mpsc::Sender;
 use std::marker::PhantomData;
+use std::hash::{Hash, Hasher};
+use crate::asset::AssetPath;
+use bevy_reflect::Uuid;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum HandleId {
-    //为不是通过读取文件生成的文件预留
-    Id(u64),
+    //为不是通过读取文件生成的资源预留
+    Id(Uuid, u64),
     AssetPathId(AssetPathId),
 }
 
@@ -17,31 +20,16 @@ impl From<AssetPathId> for HandleId {
     }
 }
 
-enum HandleType {
-    Weak,
-    Strong(Sender<RefChange>),
+impl<'a> From<AssetPath<'a>> for HandleId {
+    fn from(value: AssetPath<'a>) -> Self {
+        HandleId::AssetPathId(AssetPathId::from(&value))
+    }
 }
 
-pub enum RefChange {
-    Increment(HandleId),
-    Decrement(HandleId),
-}
-
+#[derive(Debug)]
 pub struct Handle<T> where T: Asset {
     id: HandleId,
-    handle_type: HandleType,
     marker: PhantomData<T>,
-}
-
-impl<T: Asset> Drop for Handle<T> {
-    fn drop(&mut self) {
-        match self.handle_type {
-            HandleType::Strong(ref sender) => {
-                sender.send(RefChange::Decrement(self.id));
-            }
-            HandleType::Weak => {}
-        }
-    }
 }
 
 impl<T: Asset> From<Handle<T>> for HandleId {
@@ -51,26 +39,44 @@ impl<T: Asset> From<Handle<T>> for HandleId {
 }
 
 impl<T: Asset> Handle<T> {
-    pub fn strong(id: HandleId, ref_change_sender: Sender<RefChange>) -> Self {
-        ref_change_sender.send(RefChange::Increment(id)).unwrap();
+    pub fn new(id: HandleId) -> Self {
         Self {
             id,
-            handle_type: HandleType::Strong(ref_change_sender),
             marker: PhantomData::default(),
         }
     }
-
-    pub fn weak(id: HandleId) -> Self {
-        Self {
-            id,
-            handle_type: HandleType::Weak,
-            marker:  PhantomData::default(),
-        }
-    }
-
-    pub fn is_weak(&self) -> bool { matches!(self.handle_type, HandleType::Weak) }
-
-    pub fn is_strong(&self) -> bool { matches!(self.handle_type, HandleType::Strong(_)) }
 }
 
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct HandleUntyped {
+    pub id: HandleId,
+}
+
+impl HandleUntyped {
+    pub fn typed<T: Asset>(mut self) -> Handle<T> {
+        if let HandleId::Id(type_uuid, _) = self.id {
+            if T::TYPE_UUID != type_uuid {
+                panic!("Attempted to convert handle to invalid type.");
+            }
+        }
+        Handle {
+            id: self.id,
+            marker: PhantomData::default(),
+        }
+    }
+}
+
+impl From<&HandleUntyped> for HandleId {
+    fn from(value: &HandleUntyped) -> Self {
+        value.id
+    }
+}
+
+// 
+// impl Hash for HandleUntyped {
+//     fn hash<H: Hasher>(&self, state: &mut H) {
+//         Hash::hash(&self.id, state);
+//     }
+// }
 

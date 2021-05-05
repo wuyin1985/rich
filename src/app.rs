@@ -1,26 +1,26 @@
-use legion::{World, Resources};
+use bevy_ecs::world::World;
 use assets::asset_server::AssetServer;
+use assets::asset::Asset;
 
 pub struct App {
     pub world: World,
-    pub resources: Resources,
 }
 
 impl App {
     fn startup() -> Self {
-        let world = World::default();
-        let mut resources = Resources::default();
+        let mut world = World::default();
         let asset_server = AssetServer::new();
-        resources.insert(asset_server);
-
+        world.insert_resource(asset_server);
+        
 
         return Self {
-            world,
-            resources,
+            world
         };
     }
 
-    fn register_asset<T>(&self) {
-
-    }
+     fn register_asset<T>(&self) -> &mut Self where T: Asset {
+         
+     }
+     
+    // fn register_asset_loader<T>() -> &mut Self where T: Asset {}
 }

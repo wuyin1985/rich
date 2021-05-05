@@ -1,4 +1,4 @@
-use legion::*;
+use bevy_ecs::world;
 use serde::Deserialize;
 use winit::{
     event::*,
@@ -6,9 +6,10 @@ use winit::{
 };
 use render::render_manager::RenderState;
 use std::env;
+use std::borrow::Cow;
+use std::path::PathBuf;
 
 
-mod world_initialization;
 mod app;
 
 #[derive(Debug, Deserialize)]
@@ -43,17 +44,6 @@ struct Enemy {
 fn main() {
     env_logger::init();
     let input_path = format!("{}/res/config/enemy.ron", env!("OUT_DIR"));
-    //let f = File::open(&input_path).expect("failed to open file");
-    // let enemy_list: Vec<Enemy> = match from_reader(f) {
-    //     Ok(x) => x,
-    //     Err(e) => {
-    //         panic!("Failed to load config: {}", e);
-    //     }
-    // };
-
-    let mut world = World::default();
-    let mut resources = Resources::default();
-    let mut schedule = world_initialization::startup(&world, &resources);
 
     let event_loop = EventLoop::new();
     let title = env!("CARGO_PKG_NAME");

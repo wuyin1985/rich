@@ -11,16 +11,15 @@ log = "0.4"
 
 ron = "0.6.4"
 serde = "1.0.117"
-legion = "0.3.1"
 winit = "0.22"
 futures = "0.3"
+bevy_ecs = "0.5"
 
 assets = { path = "src/library/assets" }
 render = { path = "src/library/render" }
-base = {path = "src/library/base"}
 
 [build-dependencies]
 anyhow = "1.0"
 fs_extra = "1.1"
 glob = "0.3"
-shaderc = "0.6"
+shaderc = "0.7"
