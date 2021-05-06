@@ -10,7 +10,6 @@ use std::borrow::Cow;
 use std::path::PathBuf;
 
 
-mod app;
 
 #[derive(Debug, Deserialize)]
 struct Property {

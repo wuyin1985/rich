@@ -220,7 +220,7 @@ impl AssetServer {
 
 
     pub(crate) fn update_asset_storage<T: Asset>(&self, assets: &mut Assets<T>) {
-        let asset_lifecycles = self.server.asset_lifecycles.read();
+        let asset_lifecycles = self.server.asset_lifecycles.read().unwrap();
         let asset_lifecycle = asset_lifecycles.get(&T::TYPE_UUID).unwrap();
         let mut asset_sources_guard = None;
         let channel = asset_lifecycle
@@ -234,9 +234,9 @@ impl AssetServer {
                     if let HandleId::AssetPathId(id) = result.id {
                         let asset_sources = asset_sources_guard
                             .get_or_insert_with(|| self.server.asset_sources.write().unwrap());
-                        if let Some(source_info) = asset_sources.get_mut(&id.source_path_id()) {
+                        if let Some(source_info) = asset_sources.get_mut(&id.get_source_id()) {
                             if source_info.version == result.version {
-                                source_info.committed_assets.insert(id.label_id());
+                                source_info.committed_assets.insert(id.get_label_id());
                             }
                         }
                     }
@@ -247,8 +247,8 @@ impl AssetServer {
                     if let HandleId::AssetPathId(id) = handle_id {
                         let asset_sources = asset_sources_guard
                             .get_or_insert_with(|| self.server.asset_sources.write().unwrap());
-                        if let Some(source_info) = asset_sources.get_mut(&id.source_path_id()) {
-                            source_info.committed_assets.remove(&id.label_id());
+                        if let Some(source_info) = asset_sources.get_mut(&id.get_source_id()) {
+                            source_info.committed_assets.remove(&id.get_label_id());
                         }
                     }
                     assets.remove(handle_id);
@@ -261,11 +261,11 @@ impl AssetServer {
         }
     }
 
-    // pub fn register_asset_type<T: Asset>(&self) -> Assets<T> {
-    //     self.server.asset_lifecycles.write().insert(
-    //         T::TYPE_UUID,
-    //         Box::new(AssetLifecycleChannel::<T>::default()),
-    //     );
-    //     Assets::new(self.server.asset_ref_counter.channel.sender.clone())
-    // }
+    pub fn register_asset_type<T: Asset>(&self) -> Assets<T> {
+        self.server.asset_lifecycles.write().unwrap().insert(
+            T::TYPE_UUID,
+            Box::new(AssetLifecycleChannel::<T>::default()),
+        );
+        Assets::new()
+    }
 }

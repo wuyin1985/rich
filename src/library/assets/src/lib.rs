@@ -1,4 +1,4 @@
-use bevy_ecs::schedule::SystemStage;
+use bevy_ecs::schedule::{SystemStage, StageLabel};
 use crate::handle::HandleId;
 use bevy_app::{AppBuilder, Plugin};
 use crate::asset_server::AssetServer;
@@ -61,12 +61,12 @@ impl Plugin for AssetPlugin {
                 bevy_app::CoreStage::PostUpdate,
                 AssetStage::AssetEvents,
                 SystemStage::parallel(),
-            )
-            .register_type::<HandleId>();
-            // .add_system_to_stage(
-            //     bevy_app::CoreStage::PreUpdate,
-            //     asset_server::free_unused_assets_system.system(),
-            // );
+            );
+            //.register_type::<HandleId>();
+        // .add_system_to_stage(
+        //     bevy_app::CoreStage::PreUpdate,
+        //     asset_server::free_unused_assets_system.system(),
+        // );
 
         // #[cfg(all(
         // feature = "filesystem_watcher",
