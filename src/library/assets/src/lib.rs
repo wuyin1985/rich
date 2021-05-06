@@ -5,9 +5,31 @@ use crate::asset_server::AssetServer;
 
 #[cfg(test)]
 mod tests {
+    use crate::asset_server::AssetServer;
+    use crate::asset::{TextAsset, TextAssetLoader, AssetPath};
+    use bevy_app::App;
+    use crate::AssetPlugin;
+    use crate::assets::{AddAsset, Assets};
+    use std::{thread, time};
+    use bevy_ecs::prelude::*;
+    use std::path::Path;
+
+    fn setup(world: &mut World) {
+        let p = AssetPath::new("res/test_load.txt".into(), None);
+        let mut server = world.get_resource::<AssetServer>().unwrap();
+        server.load_untyped(p);
+        let ten_millis = time::Duration::from_millis(100);
+        thread::sleep(ten_millis);
+        let assets = world.get_resource::<Assets<TextAsset>>().unwrap();
+        let txt = assets.get(p).unwrap();
+        println!("{}", txt.0);
+    }
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn test_load_text() {
+        App::build().add_plugin(AssetPlugin).
+            add_asset::<TextAsset>().add_asset_loader(&[".txt"], TextAssetLoader {})
+            .add_startup_system(setup.system()).run();
     }
 }
 
@@ -62,7 +84,7 @@ impl Plugin for AssetPlugin {
                 AssetStage::AssetEvents,
                 SystemStage::parallel(),
             );
-            //.register_type::<HandleId>();
+        //.register_type::<HandleId>();
         // .add_system_to_stage(
         //     bevy_app::CoreStage::PreUpdate,
         //     asset_server::free_unused_assets_system.system(),

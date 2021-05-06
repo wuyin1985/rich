@@ -136,7 +136,7 @@ impl<'a, 'b> From<&'a AssetPath<'b>> for AssetPathId {
 
 #[derive(Debug, TypeUuid)]
 #[uuid = "7435ff9a-3b73-4928-bee6-c47e25d3f942"]
-pub struct TextAsset(String);
+pub struct TextAsset(pub String);
 
 #[async_trait]
 pub trait AssetLoader: Send + Sync + 'static {

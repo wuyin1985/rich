@@ -7,11 +7,10 @@ use crate::asset::{Asset, AssetLoader, AssetDynamic};
 use crate::handle::{Handle, HandleId};
 
 use bevy_ecs::{
-    system::{IntoSystem, ResMut},
+    system::{IntoSystem, ResMut, Res},
     world::FromWorld,
 };
 use crate::AssetStage;
-use bevy_ecs::system::Res;
 
 #[derive(Debug)]
 pub enum AssetEvent<T: Asset> {
@@ -145,7 +144,7 @@ pub trait AddAsset {
     fn add_asset<T>(&mut self) -> &mut Self
         where
             T: Asset;
-    
+
     fn add_asset_loader<T>(&mut self, file_ext: &[&str], loader: T) -> &mut Self
         where
             T: AssetLoader;
