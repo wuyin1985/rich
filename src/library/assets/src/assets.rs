@@ -112,24 +112,14 @@ impl<T: Asset> Assets<T> {
         asset
     }
 
-    /// Clears the inner asset map, removing all key-value pairs.
-    ///
-    /// Keeps the allocated memory for reuse.
     pub fn clear(&mut self) {
         self.assets.clear()
     }
 
-    /// Reserves capacity for at least additional more elements to be inserted into the assets.
-    ///
-    /// The collection may reserve more space to avoid frequent reallocations.
     pub fn reserve(&mut self, additional: usize) {
         self.assets.reserve(additional)
     }
 
-    /// Shrinks the capacity of the asset map as much as possible.
-    ///
-    /// It will drop down as much as possible while maintaining the internal rules and possibly
-    /// leaving some space in accordance with the resize policy.
     pub fn shrink_to_fit(&mut self) {
         self.assets.shrink_to_fit()
     }
@@ -151,7 +141,6 @@ impl<T: Asset> Assets<T> {
 }
 
 
-/// [AppBuilder] extension methods for adding new asset types
 pub trait AddAsset {
     fn add_asset<T>(&mut self) -> &mut Self
         where

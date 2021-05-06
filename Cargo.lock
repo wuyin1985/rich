@@ -975,6 +975,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "game"
+version = "0.1.0"
+dependencies = [
+ "bevy_app",
+ "bevy_ecs",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2056,10 +2064,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assets",
+ "bevy_app",
  "bevy_ecs",
  "env_logger",
  "fs_extra",
  "futures",
+ "game",
  "glob",
  "log",
  "render",

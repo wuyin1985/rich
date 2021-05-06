@@ -8,7 +8,9 @@ use render::render_manager::RenderState;
 use std::env;
 use std::borrow::Cow;
 use std::path::PathBuf;
-
+use bevy_app::{AppBuilder, Plugin, App};
+use assets::AssetPlugin;
+use game::GamePlugin;
 
 
 #[derive(Debug, Deserialize)]
@@ -42,7 +44,9 @@ struct Enemy {
 
 fn main() {
     env_logger::init();
-    let input_path = format!("{}/res/config/enemy.ron", env!("OUT_DIR"));
+    let mut builder = App::build();
+    builder.add_plugin(AssetPlugin).add_plugin(GamePlugin);
+    let mut app = builder.app;
 
     let event_loop = EventLoop::new();
     let title = env!("CARGO_PKG_NAME");
@@ -85,7 +89,7 @@ fn main() {
                 }
             }
             Event::RedrawRequested(_) => {
-                //schedule.execute(&mut world, &mut resources);
+                app.update();
                 //state.update();
 
                 // match state.render() {
