@@ -7,29 +7,39 @@ use crate::asset_server::AssetServer;
 mod tests {
     use crate::asset_server::AssetServer;
     use crate::asset::{TextAsset, TextAssetLoader, AssetPath};
-    use bevy_app::App;
+    use bevy_app::{App, ScheduleRunnerSettings, ScheduleRunnerPlugin, EventWriter, AppExit};
     use crate::AssetPlugin;
     use crate::assets::{AddAsset, Assets};
-    use std::{thread, time};
+    use std::{thread, time, env};
     use bevy_ecs::prelude::*;
     use std::path::Path;
+    use std::path::PathBuf;
+    use std::time::Duration;
+    use crate::handle::{HandleUntyped, HandleId};
+    use crate::handle::HandleId::AssetPathId;
 
-    fn setup(world: &mut World) {
-        let p = AssetPath::new("res/test_load.txt".into(), None);
-        let mut server = world.get_resource::<AssetServer>().unwrap();
-        server.load_untyped(p);
-        let ten_millis = time::Duration::from_millis(100);
-        thread::sleep(ten_millis);
-        let assets = world.get_resource::<Assets<TextAsset>>().unwrap();
-        let txt = assets.get(p).unwrap();
-        println!("{}", txt.0);
+    fn setup(mut server: ResMut<AssetServer>) {
+        server.load_untyped("src/lib.rs");
+    }
+
+    fn run(texts: Res<Assets<TextAsset>>, mut app_exit_events: EventWriter<AppExit>) {
+        let p = AssetPath::new("src/lib.rs".into(), None);
+        let handle: HandleId = p.get_id().into();
+        if let Some(txt) = texts.get(handle) {
+            println!("{}", txt.0);
+            app_exit_events.send(AppExit);
+            return;
+        }
+        println!("waiting");
     }
 
     #[test]
     fn test_load_text() {
-        App::build().add_plugin(AssetPlugin).
-            add_asset::<TextAsset>().add_asset_loader(&[".txt"], TextAssetLoader {})
-            .add_startup_system(setup.system()).run();
+        App::build().insert_resource(ScheduleRunnerSettings::run_loop(Duration::from_secs_f64(
+            1.0 / 60.0,
+        ))).add_plugin(ScheduleRunnerPlugin::default()).add_plugin(AssetPlugin).
+            add_asset::<TextAsset>().add_asset_loader(&["txt", "rs"], TextAssetLoader {})
+            .add_startup_system(setup.system()).add_system(run.system()).run();
     }
 }
 

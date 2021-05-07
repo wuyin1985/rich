@@ -102,6 +102,7 @@ dependencies = [
  "crossbeam-channel",
  "downcast-rs",
  "futures",
+ "project-root",
  "thiserror",
 ]
 
@@ -1791,6 +1792,12 @@ checksum = "a152013215dca273577e18d2bf00fa862b89b24169fb78c4c95aeb07992c9cec"
 dependencies = [
  "unicode-xid 0.2.2",
 ]
+
+[[package]]
+name = "project-root"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bccbff07d5ed689c4087d20d7307a52ab6141edeedf487c3876a55b86cf63df"
 
 [[package]]
 name = "quick-error"

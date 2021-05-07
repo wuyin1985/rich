@@ -20,6 +20,7 @@ impl From<AssetPathId> for HandleId {
     }
 }
 
+
 impl<'a> From<AssetPath<'a>> for HandleId {
     fn from(value: AssetPath<'a>) -> Self {
         HandleId::AssetPathId(AssetPathId::from(&value))
