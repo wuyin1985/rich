@@ -102,19 +102,19 @@ impl CameraController {
                         self.is_down_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::W | VirtualKeyCode::Up => {
+                    VirtualKeyCode::W  => {
                         self.is_forward_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::A | VirtualKeyCode::Left => {
+                    VirtualKeyCode::A  => {
                         self.is_left_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::S | VirtualKeyCode::Down => {
+                    VirtualKeyCode::S => {
                         self.is_backward_pressed = is_pressed;
                         true
                     }
-                    VirtualKeyCode::D | VirtualKeyCode::Right => {
+                    VirtualKeyCode::D  => {
                         self.is_right_pressed = is_pressed;
                         true
                     }
@@ -179,7 +179,12 @@ struct InstanceRaw {
     rot: [f32; 4],
 }
 
+pub struct Control {
+    pos: cgmath::Vector3<f32>,
+}
+
 pub struct RenderState {
+    control: Control,
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
@@ -313,7 +318,7 @@ impl RenderState {
         let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Instance Buffer"),
             contents: bytemuck::cast_slice(&instance_data),
-            usage: wgpu::BufferUsage::VERTEX,
+            usage: wgpu::BufferUsage::VERTEX | wgpu::BufferUsage::COPY_DST,
         });
 
         let uniform_bind_group_layout =
@@ -421,7 +426,9 @@ impl RenderState {
             multisample: wgpu::MultisampleState::default(),
         });
 
+        let control = Control { pos: cgmath::vec3(0.0, 0.0, 0.0) };
         Self {
+            control,
             surface,
             device,
             queue,
@@ -453,7 +460,70 @@ impl RenderState {
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
+        match event {
+            WindowEvent::KeyboardInput {
+                input: KeyboardInput {
+                    state,
+                    virtual_keycode: Some(keycode),
+                    ..
+                },
+                ..
+            } => {
+                if *state == ElementState::Pressed
+                {
+                    match *keycode {
+                        VirtualKeyCode::Down => {
+                            self.control.pos.y -= 0.1f32;
+                        }
+                        VirtualKeyCode::Up => {
+                            self.control.pos.y += 0.1f32;
+                        }
+                        VirtualKeyCode::Left => {
+                            self.control.pos.x -= 0.1f32;
+                        }
+                        VirtualKeyCode::Right => {
+                            self.control.pos.x += 0.1f32;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        };
+
         self.camera_controller.process_events(event)
+    }
+
+    fn update_instance_transform_buffer(&mut self) {
+        const SPACE_BETWEEN: f32 = 3.0;
+        let pos = &self.control.pos;
+        let instances = (0..NUM_INSTANCES_PER_ROW)
+            .flat_map(|z| {
+                (0..NUM_INSTANCES_PER_ROW).map(move |x| {
+                    let x = SPACE_BETWEEN * (x as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0) + pos.x;
+                    let z = SPACE_BETWEEN * (z as f32 - NUM_INSTANCES_PER_ROW as f32 / 2.0) + pos.y;
+
+                    let position = cgmath::Vector3 { x, y: 0.0, z };
+
+                    let rotation = if position.is_zero() {
+                        cgmath::Quaternion::from_axis_angle(
+                            cgmath::Vector3::unit_z(),
+                            cgmath::Deg(0.0),
+                        )
+                    } else {
+                        cgmath::Quaternion::from_axis_angle(
+                            position.clone().normalize(),
+                            cgmath::Deg(45.0),
+                        )
+                    };
+
+                    Instance { position, rotation }
+                })
+            })
+            .collect::<Vec<_>>();
+
+        let instance_data = instances.iter().map(Instance::to_raw).collect::<Vec<_>>();
+        self.queue.write_buffer(&self.instance_buffer, 0, bytemuck::cast_slice(&instance_data))
     }
 
     pub fn update(&mut self) {
@@ -464,6 +534,7 @@ impl RenderState {
             0,
             bytemuck::cast_slice(&[self.uniforms]),
         );
+        self.update_instance_transform_buffer();
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SwapChainError> {
