@@ -3,9 +3,9 @@ use std::ops::Range;
 use std::path::Path;
 use wgpu::util::DeviceExt;
 use super::texture::Texture;
+use wgpu::IndexFormat;
 
 pub trait Vertex {
-    fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a>;
 }
 
 #[repr(C)]
@@ -14,33 +14,6 @@ pub struct ModelVertex {
     position: [f32; 3],
     tex_coords: [f32; 2],
     normal: [f32; 3],
-}
-
-impl Vertex for ModelVertex {
-    fn desc<'a>() -> wgpu::VertexBufferDescriptor<'a> {
-        use std::mem;
-        wgpu::VertexBufferDescriptor {
-            stride: mem::size_of::<ModelVertex>() as wgpu::BufferAddress,
-            step_mode: wgpu::InputStepMode::Vertex,
-            attributes: &[
-                wgpu::VertexAttributeDescriptor {
-                    offset: 0,
-                    shader_location: 0,
-                    format: wgpu::VertexFormat::Float3,
-                },
-                wgpu::VertexAttributeDescriptor {
-                    offset: mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-                    shader_location: 1,
-                    format: wgpu::VertexFormat::Float2,
-                },
-                wgpu::VertexAttributeDescriptor {
-                    offset: mem::size_of::<[f32; 5]>() as wgpu::BufferAddress,
-                    shader_location: 2,
-                    format: wgpu::VertexFormat::Float3,
-                },
-            ],
-        }
-    }
 }
 
 pub struct Material {
@@ -146,8 +119,8 @@ impl Model {
 }
 
 pub trait DrawModel<'a, 'b>
-where
-    'b: 'a,
+    where
+        'b: 'a,
 {
     fn draw_mesh(&mut self, mesh: &'b Mesh, material: &'b Material, uniforms: &'b wgpu::BindGroup);
     fn draw_mesh_instanced(
@@ -168,8 +141,8 @@ where
 }
 
 impl<'a, 'b> DrawModel<'a, 'b> for wgpu::RenderPass<'a>
-where
-    'b: 'a,
+    where
+        'b: 'a,
 {
     fn draw_mesh(&mut self, mesh: &'b Mesh, material: &'b Material, uniforms: &'b wgpu::BindGroup) {
         self.draw_mesh_instanced(mesh, material, 0..1, uniforms);
@@ -183,7 +156,7 @@ where
         uniforms: &'b wgpu::BindGroup,
     ) {
         self.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-        self.set_index_buffer(mesh.index_buffer.slice(..));
+        self.set_index_buffer(mesh.index_buffer.slice(..), IndexFormat::Uint32);
         self.set_bind_group(0, &material.bind_group, &[]);
         self.set_bind_group(1, &uniforms, &[]);
         self.draw_indexed(0..mesh.num_elements, 0, instances);

@@ -40,14 +40,13 @@ impl ShaderData {
 }
 
 fn main() -> Result<()> {
-    // Collect all shaders recursively within /src/
+    
     let mut shader_paths = [
         glob("./src/**/*.vert")?,
         glob("./src/**/*.frag")?,
         glob("./src/**/*.comp")?,
     ];
-
-    // This could be parallelized
+    
     let shaders = shader_paths
         .iter_mut()
         .flatten()
@@ -55,21 +54,16 @@ fn main() -> Result<()> {
         .collect::<Vec<Result<_>>>()
         .into_iter()
         .collect::<Result<Vec<_>>>()?;
-
+    
     let mut compiler = shaderc::Compiler::new().context("Unable to create shader compiler")?;
-
-    // This can't be parallelized. The [shaderc::Compiler] is not
-    // thread safe. Also, it creates a lot of resources. You could
-    // spawn multiple processes to handle this, but it would probably
-    // be better just to only compile shaders that have been changed
-    // recently.
+    
     for shader in shaders {
         // This tells cargo to rerun this script if something in /src/ changes.
         println!(
             "cargo:rerun-if-changed={}",
             shader.src_path.as_os_str().to_str().unwrap()
         );
-
+    
         let compiled = compiler.compile_into_spirv(
             &shader.src,
             shader.kind,
@@ -80,7 +74,6 @@ fn main() -> Result<()> {
         write(shader.spv_path, compiled.as_binary_u8())?;
     }
 
-    // This tells cargo to rerun this script if something in /res/ changes.
     println!("cargo:rerun-if-changed=res/*");
 
     let out_dir = env::var("OUT_DIR")?;

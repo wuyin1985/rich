@@ -10,7 +10,6 @@ pub struct GamePlugin;
 fn setup(mut commands: Commands) {}
 
 fn update() {
-    println!("update!")
 }
 
 impl Plugin for GamePlugin {

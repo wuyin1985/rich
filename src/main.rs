@@ -1,16 +1,20 @@
+use std::borrow::Cow;
+use std::env;
+use std::path::PathBuf;
+
+use bevy_app::{App, AppBuilder, Plugin};
 use bevy_ecs::world;
 use serde::Deserialize;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
 };
-use render::render_manager::RenderState;
-use std::env;
-use std::borrow::Cow;
-use std::path::PathBuf;
-use bevy_app::{AppBuilder, Plugin, App};
+
 use assets::AssetPlugin;
 use game::GamePlugin;
+use render::render_manager::RenderState;
+
+use wgpu;
 
 
 #[derive(Debug, Deserialize)]
@@ -56,7 +60,7 @@ fn main() {
         .unwrap();
 
     use futures::executor::block_on;
-    let mut state = block_on(RenderState::new(&window, env!("OUT_DIR")));
+    let mut state = block_on(RenderState::new(&window, env::current_dir().unwrap().to_str().unwrap()));
     event_loop.run(move |event, _, control_flow| {
         *control_flow = ControlFlow::Poll;
         match event {
@@ -90,14 +94,14 @@ fn main() {
             }
             Event::RedrawRequested(_) => {
                 app.update();
-                //state.update();
+                state.update();
 
-                // match state.render() {
-                //     Ok(_) => {}
-                //     Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
-                //     Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
-                //     Err(e) => eprintln!("{:?}", e),
-                // }
+                match state.render() {
+                    Ok(_) => {}
+                    Err(wgpu::SwapChainError::Lost) => state.resize(state.size),
+                    Err(wgpu::SwapChainError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                    Err(e) => eprintln!("{:?}", e),
+                }
             }
             _ => {}
         }
