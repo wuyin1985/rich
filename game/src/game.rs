@@ -1,14 +1,17 @@
 ﻿use std::ops::Deref;
+
 use bevy::app::Plugin;
 use bevy::core::FixedTimestep;
 use bevy::math::quat;
-use crate::prelude::App;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::{collide, Collision};
+use crate::attacker_config;
+
 use crate::camera::LookTransformPlugin;
 use crate::camera::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin};
 use crate::camera::unreal::{UnrealCameraBundle, UnrealCameraController, UnrealCameraPlugin};
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
+use crate::prelude::App;
 use crate::proto::PathEditor::MapConfig;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -38,6 +41,7 @@ impl Plugin for GamePlugin {
             .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(start_load))
             .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_load_finish))
             .add_system(bevy::input::system::exit_on_esc_system)
+            .add_startup_system(attacker_config::test_reflect)
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();
     }

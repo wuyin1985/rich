@@ -1,0 +1,13 @@
+[
+    (
+        name : "main",
+        ability_holders: [
+            (
+                ability:Shoot((cd:2, reload_time:3, magazine:10))
+            ),
+            (
+                ability:Channel((total_value:100, value_cost_speed:1))
+            )
+        ]
+    )
+]
