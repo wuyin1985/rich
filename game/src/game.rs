@@ -9,7 +9,6 @@ use crate::camera::LookTransformPlugin;
 use crate::camera::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin};
 use crate::camera::unreal::{UnrealCameraBundle, UnrealCameraController, UnrealCameraPlugin};
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
-//use bevy_4x_camera::{CameraRigBundle, FourXCameraPlugin};
 use crate::proto::PathEditor::MapConfig;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -37,7 +36,7 @@ impl Plugin for GamePlugin {
 
             .add_state(GameState::Loading)
             .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(start_load))
-            .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_load))
+            .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_load_finish))
             .add_system(bevy::input::system::exit_on_esc_system)
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();
@@ -54,11 +53,9 @@ fn start_load(mut commands: Commands, asset_server: Res<AssetServer>) {
     )).with_children(|parent| {
         parent.spawn_scene(asset_server.load("gltf/Map_export.glb#Scene0"));
     });
-
-    //commands.spawn_scene(asset_server.load("gltf/CesiumMan.glb#Scene0"));
 }
 
-fn check_load(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
+fn check_load_finish(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
               mut state: ResMut<State<GameState>>,
               map_handle: Res<Handle<MapConfigAsset>>,
               mut meshes: ResMut<Assets<Mesh>>,

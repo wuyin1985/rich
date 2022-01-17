@@ -305,7 +305,7 @@ impl MessageWrite for PathWayPointData {
 #[derive(Debug, Default, PartialEq, Clone)]
 pub struct Wave {
     pub wait_time: f32,
-    pub unit: String,
+    pub unit: u64,
     pub spawn_cool_down: f32,
     pub duration: f32,
     pub per_spawn_count: i32,
@@ -318,7 +318,7 @@ impl<'a> MessageRead<'a> for Wave {
         while !r.is_eof() {
             match r.next_tag(bytes) {
                 Ok(13) => msg.wait_time = r.read_float(bytes)?,
-                Ok(18) => msg.unit = r.read_string(bytes)?.to_owned(),
+                Ok(16) => msg.unit = r.read_uint64(bytes)?,
                 Ok(29) => msg.spawn_cool_down = r.read_float(bytes)?,
                 Ok(37) => msg.duration = r.read_float(bytes)?,
                 Ok(40) => msg.per_spawn_count = r.read_int32(bytes)?,
@@ -335,7 +335,7 @@ impl MessageWrite for Wave {
     fn get_size(&self) -> usize {
         0
         + if self.wait_time == 0f32 { 0 } else { 1 + 4 }
-        + if self.unit == String::default() { 0 } else { 1 + sizeof_len((&self.unit).len()) }
+        + if self.unit == 0u64 { 0 } else { 1 + sizeof_varint(*(&self.unit) as u64) }
         + if self.spawn_cool_down == 0f32 { 0 } else { 1 + 4 }
         + if self.duration == 0f32 { 0 } else { 1 + 4 }
         + if self.per_spawn_count == 0i32 { 0 } else { 1 + sizeof_varint(*(&self.per_spawn_count) as u64) }
@@ -344,7 +344,7 @@ impl MessageWrite for Wave {
 
     fn write_message<W: WriterBackend>(&self, w: &mut Writer<W>) -> Result<()> {
         if self.wait_time != 0f32 { w.write_with_tag(13, |w| w.write_float(*&self.wait_time))?; }
-        if self.unit != String::default() { w.write_with_tag(18, |w| w.write_string(&**&self.unit))?; }
+        if self.unit != 0u64 { w.write_with_tag(16, |w| w.write_uint64(*&self.unit))?; }
         if self.spawn_cool_down != 0f32 { w.write_with_tag(29, |w| w.write_float(*&self.spawn_cool_down))?; }
         if self.duration != 0f32 { w.write_with_tag(37, |w| w.write_float(*&self.duration))?; }
         if self.per_spawn_count != 0i32 { w.write_with_tag(40, |w| w.write_int32(*&self.per_spawn_count))?; }

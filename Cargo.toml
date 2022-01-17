@@ -13,5 +13,7 @@ editor = {path = "editor"}
 resolver = "2"
 members = [
     "game",
-    "editor"
+    "editor",
+    "tool/hashtool",
+    "tool/hashtoolbin"
 ]
