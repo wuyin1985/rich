@@ -128,7 +128,7 @@ impl HashTool {
 
     #[cfg(feature = "save_reverse_hash")]
     pub fn un_hash(&mut self, hash: u64) -> Option<String> {
-        let mut g = self.reverse_dict.lock().unwrap();
+        let g = self.reverse_dict.lock().unwrap();
         g.get(&hash).cloned()
     }
 }

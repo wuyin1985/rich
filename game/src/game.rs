@@ -1,20 +1,12 @@
-﻿use std::ops::Deref;
-
-use bevy::app::Plugin;
-use bevy::core::FixedTimestep;
-use bevy::math::quat;
+﻿use bevy::app::Plugin;
 use bevy::prelude::*;
-use bevy::sprite::collide_aabb::{collide, Collision};
-
-use crate::{attacker_config, monster, stage};
+use std::ops::Deref;
+use crate::{monster, stage};
 use crate::attacker_config::AttackerConfig;
 use crate::camera::LookTransformPlugin;
-use crate::camera::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin};
-use crate::camera::unreal::{UnrealCameraBundle, UnrealCameraController, UnrealCameraPlugin};
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
 use crate::monster::MonsterConfig;
 use crate::prelude::App;
-use crate::proto::PathEditor::MapConfig;
 use crate::table_data::{TableData, TableDataItem};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
@@ -43,7 +35,6 @@ impl Plugin for GamePlugin {
             })
             .add_plugins(DefaultPlugins)
             .add_plugin(LookTransformPlugin)
-            .add_plugin(OrbitCameraPlugin::default())
 
             .add_state(GameState::Loading)
             .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(start_load))

@@ -1,3 +1,4 @@
+#[allow(unused_variables, dead_code)]
 use editor::EditorPlugin;
 use game::GamePlugin;
 use game::prelude::*;

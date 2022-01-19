@@ -1,10 +1,9 @@
-﻿use std::ops::{Deref, DerefMut};
-use bevy::gltf::Gltf;
-use bevy::prelude::*;
-use crate::proto::PathEditor::MapConfig;
-use rand::Rng;
+﻿use bevy::prelude::*;
+use std::ops::DerefMut;
+
 use crate::map::MapConfigAsset;
 use crate::monster::{MonsterConfig, MoveWithMapPath};
+use crate::proto::PathEditor::MapConfig;
 use crate::rand_position;
 use crate::table_data::TableData;
 
@@ -32,6 +31,7 @@ pub struct MapStageWorkingWave {
 
 mod path_config_util {
     use bevy::math::vec3;
+
     use crate::prelude::Vec3;
     use crate::prelude::Vec4;
     use crate::proto::PathEditor::{MapVector3, MapVector4};
@@ -63,7 +63,7 @@ impl MapStage {
         let mut waiting_queues = Vec::new();
 
         let queues = config.wave_queues.iter().enumerate().map(|(queue_idx, wq)| {
-            let waves = wq.waves.iter().enumerate().map(|(wave_idx, ws)| {
+            let waves = wq.waves.iter().map(|ws| {
                 MapStageWave {
                     wait_time: ws.wait_time,
                     per_spawn_unit_count: ws.per_spawn_count as _,
@@ -122,37 +122,37 @@ pub fn init_stage_system(mut commands: Commands, res: Res<Assets<MapConfigAsset>
 }
 
 pub fn update_stage_system(mut commands: Commands,
-                           mut MapStage: ResMut<MapStage>,
+                           mut map_stage: ResMut<MapStage>,
                            map_assets: Res<Assets<MapConfigAsset>>,
                            asset_server: Res<AssetServer>,
                            monster_table: Res<TableData<MonsterConfig>>,
                            time: Res<Time>) {
-    let MapStage = MapStage.deref_mut();
+    let map_stage = map_stage.deref_mut();
     let delta = time.delta().as_secs_f32();
-    MapStage.past_time += delta;
+    map_stage.past_time += delta;
 
     let (_, config_asset) = map_assets.iter().next().expect("no map config loaded");
     let config = &config_asset.config;
 
     //check waiting
-    MapStage.waiting_queues.retain(|queue_idx| {
-        let past = (MapStage.past_time >= MapStage.queues[*queue_idx].wait_time);
+    map_stage.waiting_queues.retain(|queue_idx| {
+        let past = map_stage.past_time >= map_stage.queues[*queue_idx].wait_time;
         if past {
-            MapStage.working_queues.push(MapStageWorkingQueue { queue_idx: *queue_idx, waiting_wave_idx: 0, working_waves: Default::default() });
+            map_stage.working_queues.push(MapStageWorkingQueue { queue_idx: *queue_idx, waiting_wave_idx: 0, working_waves: Default::default() });
         }
         !past
     });
 
     //check working
-    for i in (0..MapStage.working_queues.len()).rev() {
-        let working = &mut MapStage.working_queues[i];
+    for i in (0..map_stage.working_queues.len()).rev() {
+        let working = &mut map_stage.working_queues[i];
         let mut finish = false;
-        let queue = &MapStage.queues[working.queue_idx];
+        let queue = &map_stage.queues[working.queue_idx];
         if working.waiting_wave_idx > queue.waves.len() - 1 {
-            finish = (working.working_waves.len() == 0);
+            finish = working.working_waves.len() == 0;
         } else {
             let waiting_wave = &queue.waves[working.waiting_wave_idx];
-            if MapStage.past_time >= waiting_wave.wait_time {
+            if map_stage.past_time >= waiting_wave.wait_time {
                 //add wave
                 working.working_waves.push(MapStageWorkingWave { wave_idx: working.waiting_wave_idx, work_time: 0f32, spawn_cool_down: 0f32 });
                 working.waiting_wave_idx += 1;
@@ -160,12 +160,12 @@ pub fn update_stage_system(mut commands: Commands,
         }
 
         if finish {
-            MapStage.working_queues.remove(i);
+            map_stage.working_queues.remove(i);
         }
     };
 
     //update wave
-    for queue in &mut MapStage.working_queues {
+    for queue in &mut map_stage.working_queues {
         let mut ww = std::mem::take(&mut queue.working_waves);
         for i in (0..ww.len()).rev() {
             let wave = &mut ww[i];

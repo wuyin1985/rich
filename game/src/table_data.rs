@@ -1,15 +1,4 @@
-use std::collections::hash_map::DefaultHasher;
-use std::fs::File;
-use std::hash::{Hash, Hasher};
-use std::io::Write;
-
-use bevy::prelude::*;
 use bevy::utils::HashMap;
-use serde::Serialize;
-
-use hashtoollib::HashTool;
-
-use super::attacker_config::AttackerConfig;
 
 pub trait TableDataItem: serde::de::DeserializeOwned + Send + Sync + 'static {
     fn get_name(&self) -> &str;

@@ -1,14 +1,4 @@
-use bevy::{
-    prelude::*,
-    reflect::{
-        DynamicStruct,
-        serde::{ReflectDeserializer, ReflectSerializer}, TypeRegistry,
-    },
-};
 use bevy::reflect::TypeUuid;
-use serde::{Deserialize, Serialize};
-use serde::de::DeserializeSeed;
-
 use super::ability::{ChannelAbility, ShootAbility};
 use super::table_data::TableDataItem;
 
