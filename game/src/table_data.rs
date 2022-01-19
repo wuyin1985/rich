@@ -7,9 +7,11 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use serde::Serialize;
 
+use hashtoollib::HashTool;
+
 use super::attacker_config::AttackerConfig;
 
-pub trait TableDataItem: serde::de::DeserializeOwned {
+pub trait TableDataItem: serde::de::DeserializeOwned + Send + Sync + 'static {
     fn get_name(&self) -> &str;
 }
 
@@ -28,13 +30,16 @@ impl<T> TableData<T> where T: TableDataItem {
 
         let dict = list.into_iter().map(|item| {
             let name = item.get_name();
-            let mut s = DefaultHasher::new();
-            name.hash(&mut s);
-            let id = s.finish();
+            let id = hashtoollib::hash(name);
             (id, item)
         }).collect::<HashMap<_, _>>();
 
         Self { dict }
+    }
+
+    pub fn load_from_file(path: &str) -> Self {
+        let data = std::fs::read(path).expect(format!("failed to load table config {}", path).as_str());
+        Self::load_from_bytes(&data)
     }
 
     pub fn find(&self, name: u64) -> Option<&T> {
@@ -44,26 +49,20 @@ impl<T> TableData<T> where T: TableDataItem {
     pub fn index(&self, name: u64) -> &T {
         match self.find(name) {
             None => {
-                panic!("failed to find {} from table {}", name, std::any::type_name::<T>());
+                let mut print_name = name.to_string();
+
+                #[cfg(feature = "debug")]
+                    {
+                        if let Some(s) = hashtoollib::un_hash(name) {
+                            print_name = s;
+                        }
+                    }
+
+                panic!("failed to find '{}' from table {}", print_name, std::any::type_name::<T>());
             }
             Some(t) => {
                 t
             }
         }
-    }
-
-    #[cfg(feature = "build_editor")]
-    pub fn gen_bin(from_path: &str, to_path: &str) {
-        use ron::de::from_reader;
-        use ron::ser::{to_string_pretty, PrettyConfig};
-
-    }
-
-    //todo generate str id
-    pub fn index_by_str(&self, name: &str) -> &T {
-        let mut h = DefaultHasher::new();
-        name.hash(&mut h);
-        let id = h.finish();
-        self.index(id)
     }
 }

@@ -1,7 +1,6 @@
 ﻿use std::env;
-use std::fs::File;
-use std::io::Write;
-use anyhow::{Context, Result};
+
+use anyhow::{Result};
 
 fn main() -> Result<()> {
     println!("CARGO_MANIFEST_DIR {}", env!("CARGO_MANIFEST_DIR"));

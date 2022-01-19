@@ -6,7 +6,12 @@ edition = "2021"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+xxhash-rust = { version = "0.8.2", features = ["xxh3"] }
 
 [lib]
 name = "hashtoollib"
 crate-type = ["dylib"]
+
+[features]
+default = ["save_reverse_hash"]
+save_reverse_hash = []

@@ -5,14 +5,17 @@ use bevy::core::FixedTimestep;
 use bevy::math::quat;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::{collide, Collision};
-use crate::attacker_config;
 
+use crate::{attacker_config, monster, stage};
+use crate::attacker_config::AttackerConfig;
 use crate::camera::LookTransformPlugin;
 use crate::camera::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin};
 use crate::camera::unreal::{UnrealCameraBundle, UnrealCameraController, UnrealCameraPlugin};
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
+use crate::monster::MonsterConfig;
 use crate::prelude::App;
 use crate::proto::PathEditor::MapConfig;
+use crate::table_data::{TableData, TableDataItem};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
@@ -25,6 +28,11 @@ pub struct GamePlugin {}
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        #[cfg(feature = "debug")]
+            {
+                hashtoollib::load_reverse_dict("assets/config/hash.json");
+            }
+
         app.insert_resource(
             WindowDescriptor {
                 title: "Rich".to_string(),
@@ -40,11 +48,22 @@ impl Plugin for GamePlugin {
             .add_state(GameState::Loading)
             .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(start_load))
             .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_load_finish))
+
+            .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(stage::init_stage_system))
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::update_stage_system))
+            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(monster::move_by_map_path_system))
+
             .add_system(bevy::input::system::exit_on_esc_system)
-            .add_startup_system(attacker_config::test_reflect)
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();
+
+        load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
+        load_table::<MonsterConfig>(app, "assets/config/ron/monster.ron");
     }
+}
+
+fn load_table<T>(app: &mut App, path: &str) where T: TableDataItem {
+    app.insert_resource(TableData::<T>::load_from_file(path));
 }
 
 fn start_load(mut commands: Commands, asset_server: Res<AssetServer>) {
@@ -60,10 +79,10 @@ fn start_load(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 
 fn check_load_finish(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
-              mut state: ResMut<State<GameState>>,
-              map_handle: Res<Handle<MapConfigAsset>>,
-              mut meshes: ResMut<Assets<Mesh>>,
-              mut materials: ResMut<Assets<StandardMaterial>>) {
+                     mut state: ResMut<State<GameState>>,
+                     map_handle: Res<Handle<MapConfigAsset>>,
+                     mut meshes: ResMut<Assets<Mesh>>,
+                     mut materials: ResMut<Assets<StandardMaterial>>) {
     if let Some(asset) = map.get(map_handle.deref()) {
         let config = &asset.config;
 
@@ -152,7 +171,7 @@ fn check_load_finish(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
             }
         }
 
-        state.set(GameState::Playing);
+        state.set(GameState::Playing).expect(format!("failed to switch game state to {:?}", GameState::Playing).as_str());
     }
 }
 

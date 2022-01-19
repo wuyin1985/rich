@@ -1500,6 +1500,7 @@ dependencies = [
  "bevy",
  "hashtool",
  "quick-protobuf",
+ "rand",
  "ron",
  "serde",
 ]
@@ -1690,6 +1691,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "xxhash-rust",
 ]
 
 [[package]]
@@ -3473,3 +3475,9 @@ name = "xi-unicode"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a67300977d3dc3f8034dae89778f502b6ba20b269527b3223ba59c0cf393bb8a"
+
+[[package]]
+name = "xxhash-rust"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e575e15bedf6e57b5c2d763ffc6c3c760143466cbd09d762d539680ab5992ded"

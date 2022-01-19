@@ -1,0 +1,7 @@
+[
+    (
+        name : "goblin",
+        move_speed: 1,
+        asset: "gltf/CesiumMan.glb#Scene0"
+    )
+]
