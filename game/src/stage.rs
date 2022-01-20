@@ -1,5 +1,6 @@
 ﻿use bevy::prelude::*;
 use std::ops::DerefMut;
+use itertools::Itertools;
 
 use crate::map::MapConfigAsset;
 use crate::monster::{MonsterConfig, MoveWithMapPath};
@@ -47,29 +48,78 @@ mod path_config_util {
 }
 
 impl MapStage {
-    fn line_space(start: Vec3, stop: Vec3, nstep: u32) -> Vec<Vec3>
-    {
-        let delta = (stop - start) / ((nstep - 1) as f32);
-        return (0..(nstep))
-            .map(|i| start + (i as f32) * delta)
-            .collect();
-    }
 
-    fn get_start_stop(point: Vec3, range: f32) -> (Vec3, Vec3) {
-
-    }
+    //fn get_start_stop(point: Vec3, range: f32) -> (Vec3, Vec3) {}
 
     pub fn create(config: &MapConfig) -> Self {
+        fn get_dir(points: &Vec<PathWayPointData>, idx_a: usize, idx_b: usize) -> (Vec3, (Vec3, f32), (Vec3, f32)) {
+            let pa = &points[idx_a];
+            let pb = &points[idx_b];
+            let a = path_config_util::to_vec3(pa.position.as_ref().unwrap());
+            let b = path_config_util::to_vec3(pb.position.as_ref().unwrap());
+            let horizon = (b.x - a.x).abs() > (b.z - a.z).abs();
+            let dir = match horizon {
+                true => {
+                    Vec3::new(0f32, 0f32, 1f32)
+                }
+                false => {
+                    Vec3::new(1f32, 0f32, 0f32)
+                }
+            };
+            (dir, (a, pa.reach_range), (b, pb.reach_range))
+        }
+
+        fn get_line_start_stop(pos: &Vec3, dir: &Vec3, range: &f32) -> (Vec3, Vec3) {
+            let add = dir * range;
+            (pos - add / 2, pos + add / 2)
+        }
+
+        fn line_space(start: Vec3, stop: Vec3, nstep: u32) -> Vec<Vec3>
+        {
+            let delta = (stop - start) / ((nstep - 1) as f32);
+            return (0..(nstep))
+                .map(|i| start + (i as f32) * delta)
+                .collect();
+        }
+
         config.paths.iter().enumerate().for_each(|(path_idx, path)| {
+            let mut spawn_lines = Vec::new();
+            let point_count = path.points.len();
+            if point_count > 1 {
+                let (line_dir, (a, a_len), _) = get_dir(&path.points, 0, 1);
+                spawn_lines.push((a, line_dir, a_len))
+            }
+
+            let extends = path.points.windows(3).map(|t| {
+                let ((a, _), (b, b_len), (c, _)) = t.iter().map(|pd| {
+                    let mut p = path_config_util::to_vec3(&pd.position.as_ref().unwrap());
+                    p.y = 0f32;
+                    (p, pd.reach_range)
+                }).next_tuple().unwrap();
+
+                let normal: Vec3 = (a - b).normalize() + (c - b).normalize();
+                let line_dir = Vec3::Y.cross(normal).normalize();
+                (b, line_dir, b_len)
+            });
+            spawn_lines.extend(extends);
+
+            if point_count > 1 {
+                let (line_dir, _, (b, b_len)) = get_dir(&path.points, point_count - 2, point_count - 1);
+                spawn_lines.push((b, line_dir, b_len))
+            }
+            assert_eq!(point_count, spawn_lines.len(), "point count not equal");
+
             let max_range = path.points.iter().fold(0f32, |ranger_of_points, point| {
                 point.reach_range.max(ranger_of_points)
             });
 
             const PER_PATH_RANGE_DELTA: f32 = 0.25f32;
             let road_count = (max_range / PER_PATH_RANGE_DELTA).ceil() as u32;
-            for t in path.points.windows(2) {
-                let [a, b]: &[PathWayPointData; 2] = t.try_into().unwrap();
-            }
+
+            spawn_lines.iter().map(|(pos, dir, len)| {
+                let (start, stop) = get_line_start_stop(pos, dir, len);
+                line_space(start, stop, road_count)
+            });
         });
 
         for cp in &config.paths {
