@@ -59,6 +59,7 @@ pub struct Smoother {
 }
 
 impl Smoother {
+    #[allow(dead_code)]
     pub fn new(lag_weight: f32) -> Self {
         Self {
             lag_weight,
@@ -66,6 +67,7 @@ impl Smoother {
         }
     }
 
+    #[allow(dead_code)]
     pub fn set_lag_weight(&mut self, lag_weight: f32) {
         self.lag_weight = lag_weight;
     }

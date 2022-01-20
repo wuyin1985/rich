@@ -3,10 +3,9 @@ mod proto;
 mod game;
 mod camera;
 mod stage;
-mod ability;
-mod attacker_config;
+mod attacker;
 mod monster;
-mod table_data;
+mod table;
 
 pub mod prelude {
     pub use bevy::prelude::*;

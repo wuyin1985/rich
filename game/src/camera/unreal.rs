@@ -19,6 +19,7 @@ pub struct UnrealCameraPlugin {
 }
 
 impl UnrealCameraPlugin {
+    #[allow(dead_code)]
     pub fn new(override_input_system: bool) -> Self {
         Self {
             override_input_system,
@@ -47,6 +48,7 @@ pub struct UnrealCameraBundle {
 }
 
 impl UnrealCameraBundle {
+    #[allow(dead_code)]
     pub fn new(
         controller: UnrealCameraController,
         mut perspective: PerspectiveCameraBundle,

@@ -16,6 +16,7 @@ pub struct FpsCameraPlugin {
 }
 
 impl FpsCameraPlugin {
+    #[allow(dead_code)]
     pub fn new(override_input_system: bool) -> Self {
         Self {
             override_input_system,
@@ -44,6 +45,7 @@ pub struct FpsCameraBundle {
 }
 
 impl FpsCameraBundle {
+    #[allow(dead_code)]
     pub fn new(
         controller: FpsCameraController,
         mut perspective: PerspectiveCameraBundle,

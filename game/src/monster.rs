@@ -1,10 +1,11 @@
 ﻿use std::ops::Deref;
+use std::sync::Mutex;
 use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::tasks::ComputeTaskPool;
 use serde::{Serialize, Deserialize};
 use crate::stage::MapStage;
-use crate::table_data::TableDataItem;
+use crate::table::TableDataItem;
 
 #[derive(Deserialize, Serialize, TypeUuid)]
 #[uuid = "9a852db2-3eb7-4c91-99ae-ec1ea92f2877"]
@@ -27,15 +28,24 @@ pub struct MoveWithMapPath {
     pub speed: f32,
 }
 
-pub fn move_by_map_path_system(pool: Res<ComputeTaskPool>,
-                               mut query: Query<(&mut MoveWithMapPath, &mut Transform)>,
+#[derive(Component)]
+pub struct MoveWithPathEnded {}
+
+pub fn move_by_map_path_system(mut commands: Commands,
+                               pool: Res<ComputeTaskPool>,
+                               mut query: Query<(Entity, &mut MoveWithMapPath, &mut Transform), Without<MoveWithPathEnded>>,
                                stage: Res<MapStage>,
                                time: Res<Time>) {
+
     let delta = time.delta_seconds();
     let stage = stage.deref();
-    query.par_for_each_mut(&pool, 64, |(mut move_with, mut transform)| {
+    let cs = Mutex::new(commands);
+
+    query.par_for_each_mut(&pool, 64, |(entity, mut move_with, mut transform)| {
         let path = &stage.paths[move_with.path_index];
         if move_with.target_point_index > path.points.len() - 1 {
+            let mut g = cs.lock().unwrap();
+            g.entity(entity).insert(MoveWithPathEnded {});
             return;
         }
 

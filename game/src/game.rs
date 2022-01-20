@@ -2,17 +2,18 @@
 use bevy::prelude::*;
 use std::ops::Deref;
 use crate::{monster, stage};
-use crate::attacker_config::AttackerConfig;
+use crate::attacker::AttackerConfig;
 use crate::camera::LookTransformPlugin;
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
 use crate::monster::MonsterConfig;
 use crate::prelude::App;
-use crate::table_data::{TableData, TableDataItem};
+use crate::table::{TableData, TableDataItem};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
     Loading,
     Playing,
+    #[allow(dead_code)]
     Result,
 }
 

@@ -19,6 +19,7 @@ pub struct OrbitCameraPlugin {
 }
 
 impl OrbitCameraPlugin {
+    #[allow(dead_code)]
     pub fn new(override_input_system: bool) -> Self {
         Self {
             override_input_system,
@@ -47,6 +48,7 @@ pub struct OrbitCameraBundle {
 }
 
 impl OrbitCameraBundle {
+    #[allow(dead_code)]
     pub fn new(
         controller: OrbitCameraController,
         mut perspective: PerspectiveCameraBundle,

@@ -3,9 +3,9 @@ use std::ops::DerefMut;
 
 use crate::map::MapConfigAsset;
 use crate::monster::{MonsterConfig, MoveWithMapPath};
-use crate::proto::PathEditor::MapConfig;
+use crate::proto::PathEditor::{MapConfig, PathWayPointData};
 use crate::rand_position;
-use crate::table_data::TableData;
+use crate::table::TableData;
 
 pub struct MapStage {
     pub paths: Vec<MapStagePath>,
@@ -40,13 +40,41 @@ mod path_config_util {
         vec3(v.x, v.y, v.z)
     }
 
+    #[allow(dead_code)]
     pub fn to_vec4(v: &MapVector4) -> Vec4 {
         Vec4::new(v.x, v.y, v.z, v.w)
     }
 }
 
 impl MapStage {
+    fn line_space(start: Vec3, stop: Vec3, nstep: u32) -> Vec<Vec3>
+    {
+        let delta = (stop - start) / ((nstep - 1) as f32);
+        return (0..(nstep))
+            .map(|i| start + (i as f32) * delta)
+            .collect();
+    }
+
+    fn get_start_stop(point: Vec3, range: f32) -> (Vec3, Vec3) {
+
+    }
+
     pub fn create(config: &MapConfig) -> Self {
+        config.paths.iter().enumerate().for_each(|(path_idx, path)| {
+            let max_range = path.points.iter().fold(0f32, |ranger_of_points, point| {
+                point.reach_range.max(ranger_of_points)
+            });
+
+            const PER_PATH_RANGE_DELTA: f32 = 0.25f32;
+            let road_count = (max_range / PER_PATH_RANGE_DELTA).ceil() as u32;
+            for t in path.points.windows(2) {
+                let [a, b]: &[PathWayPointData; 2] = t.try_into().unwrap();
+            }
+        });
+
+        for cp in &config.paths {
+            for t in cp.points.windows(2) {}
+        }
         let paths = config.paths.iter().map(|path| {
             let points = path.points.iter().map(|p| {
                 MapStagePathPoint {
@@ -101,6 +129,7 @@ pub struct MapStagePath {
     pub points: Vec<MapStagePathPoint>,
 }
 
+#[allow(dead_code)]
 pub struct MapStageWave {
     wait_time: f32,
     uint_name: u64,
@@ -118,7 +147,6 @@ pub struct StageWaveQueue {
 pub fn init_stage_system(mut commands: Commands, res: Res<Assets<MapConfigAsset>>) {
     let (_, config) = res.iter().next().expect("no map config loaded");
     commands.insert_resource(MapStage::create(&config.config));
-    info!("MapStage init");
 }
 
 pub fn update_stage_system(mut commands: Commands,
