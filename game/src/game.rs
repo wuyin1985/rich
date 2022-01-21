@@ -1,6 +1,7 @@
 ﻿use bevy::app::Plugin;
 use bevy::prelude::*;
 use std::ops::Deref;
+use bevy_prototype_debug_lines::DebugLinesPlugin;
 use crate::{monster, stage};
 use crate::attacker::AttackerConfig;
 use crate::camera::LookTransformPlugin;
@@ -35,6 +36,7 @@ impl Plugin for GamePlugin {
                 ..Default::default()
             })
             .add_plugins(DefaultPlugins)
+            .add_plugin(DebugLinesPlugin::default())
             .add_plugin(LookTransformPlugin)
 
             .add_state(GameState::Loading)
@@ -48,6 +50,11 @@ impl Plugin for GamePlugin {
             .add_system(bevy::input::system::exit_on_esc_system)
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();
+
+        #[cfg(feature = "debug")]
+            {
+                app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::draw_stage_roads));
+            }
 
         load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
         load_table::<MonsterConfig>(app, "assets/config/ron/monster.ron");
@@ -104,6 +111,7 @@ fn check_load_finish(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
         }
 
         //light
+        if false
         {
             const HALF_SIZE: f32 = 1.0;
             let light_config = config.light.as_ref().unwrap();

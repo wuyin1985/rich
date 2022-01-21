@@ -1,5 +1,5 @@
 ﻿use bevy::prelude::*;
-use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
 use itertools::Itertools;
 
 use crate::map::MapConfigAsset;
@@ -7,6 +7,7 @@ use crate::monster::{MonsterConfig, MoveWithMapPath};
 use crate::proto::PathEditor::{MapConfig, PathWayPointData};
 use crate::rand_position;
 use crate::table::TableData;
+use bevy_prototype_debug_lines::*;
 
 pub struct MapStage {
     pub roads: Vec<MapStageRoad>,
@@ -51,13 +52,14 @@ mod path_config_util {
 
 impl MapStage {
     pub fn create(config: &MapConfig) -> Self {
-        fn get_dir(points: &Vec<PathWayPointData>, idx_a: usize, idx_b: usize) -> (Vec3, (Vec3, f32), (Vec3, f32)) {
+        fn get_dir(points: &Vec<PathWayPointData>, idx_a: usize, idx_b: usize, last_dir: Option<Vec3>) ->
+        (Vec3, (Vec3, f32), (Vec3, f32)) {
             let pa = &points[idx_a];
             let pb = &points[idx_b];
             let a = path_config_util::to_vec3(pa.position.as_ref().unwrap());
             let b = path_config_util::to_vec3(pb.position.as_ref().unwrap());
             let horizon = (b.x - a.x).abs() > (b.z - a.z).abs();
-            let dir = match horizon {
+            let mut dir = match horizon {
                 true => {
                     Vec3::new(0f32, 0f32, 1f32)
                 }
@@ -65,6 +67,13 @@ impl MapStage {
                     Vec3::new(1f32, 0f32, 0f32)
                 }
             };
+
+            if let Some(ld) = last_dir {
+                if ld.dot(dir) < 0f32 {
+                    dir = -dir;
+                }
+            }
+
             (dir, (a, pa.reach_range), (b, pb.reach_range))
         }
 
@@ -89,9 +98,11 @@ impl MapStage {
             let mut spawn_lines = Vec::new();
             let point_count = path.points.len();
             if point_count > 1 {
-                let (line_dir, (a, a_len), _) = get_dir(&path.points, 0, 1);
+                let (line_dir, (a, a_len), _) = get_dir(&path.points, 0, 1, None);
                 spawn_lines.push((a, line_dir, a_len))
             }
+
+            let mut last_dir = None;
 
             let extends = path.points.windows(3).map(|t| {
                 let ((a, _), (b, b_len), (c, _)) = t.iter().map(|pd| {
@@ -101,22 +112,24 @@ impl MapStage {
                 }).next_tuple().unwrap();
 
                 let normal: Vec3 = (a - b).normalize() + (c - b).normalize();
-                let line_dir = Vec3::Y.cross(normal).normalize();
-                (b, line_dir, b_len)
+                last_dir = Some(normal);
+                (b, normal, b_len)
             });
+
             spawn_lines.extend(extends);
 
             if point_count > 1 {
-                let (line_dir, _, (b, b_len)) = get_dir(&path.points, point_count - 2, point_count - 1);
+                let (line_dir, _, (b, b_len)) = get_dir(&path.points, point_count - 2, point_count - 1, last_dir);
                 spawn_lines.push((b, line_dir, b_len))
             }
+
             assert_eq!(point_count, spawn_lines.len(), "point count not equal");
 
             let max_range = path.points.iter().fold(0f32, |ranger_of_points, point| {
                 point.reach_range.max(ranger_of_points)
             });
 
-            const PER_PATH_RANGE_DELTA: f32 = 0.25f32;
+            const PER_PATH_RANGE_DELTA: f32 = 1.0f32;
             let road_count = (max_range / PER_PATH_RANGE_DELTA).ceil() as u32;
 
             let road_points = spawn_lines.iter().map(|(pos, dir, len)| {
@@ -200,6 +213,18 @@ pub fn init_stage_system(mut commands: Commands, res: Res<Assets<MapConfigAsset>
     let (_, config) = res.iter().next().expect("no map config loaded");
     commands.insert_resource(MapStage::create(&config.config));
 }
+
+
+#[cfg(feature = "debug")]
+pub fn draw_stage_roads(mut map_stage: Res<MapStage>, mut lines: ResMut<DebugLines>) {
+    let map_stage = map_stage.deref();
+    for road in &map_stage.roads {
+        for t in road.points.windows(2) {
+            lines.line_colored(t[0].pos, t[1].pos, 0.0f32, Color::GREEN);
+        }
+    }
+}
+
 
 pub fn update_stage_system(mut commands: Commands,
                            mut map_stage: ResMut<MapStage>,

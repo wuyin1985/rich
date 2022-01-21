@@ -544,6 +544,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_prototype_debug_lines"
+version = "0.4.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_reflect"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1504,6 +1511,7 @@ dependencies = [
  "anyhow",
  "approx 0.4.0",
  "bevy",
+ "bevy_prototype_debug_lines",
  "hashtool",
  "itertools",
  "quick-protobuf",

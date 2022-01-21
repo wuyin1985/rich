@@ -13,7 +13,8 @@ members = [
     "game",
     "editor",
     "tool/hashtool",
-    "tool/hashtoolbin"
+    "tool/hashtoolbin",
+    "third/bevy_prototype_debug_lines"
 ]
 
 [features]
