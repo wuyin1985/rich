@@ -9,7 +9,8 @@ use crate::rand_position;
 use crate::table::TableData;
 
 pub struct MapStage {
-    pub paths: Vec<MapStagePath>,
+    pub roads: Vec<MapStageRoad>,
+    path_2_road: Vec<StagePath2RoadMap>,
     queues: Vec<StageWaveQueue>,
     waiting_queues: Vec<usize>,
     working_queues: Vec<MapStageWorkingQueue>,
@@ -25,6 +26,7 @@ pub struct MapStageWorkingQueue {
 
 #[derive(Default)]
 pub struct MapStageWorkingWave {
+    spawn_road_idx: usize,
     work_time: f32,
     wave_idx: usize,
     spawn_cool_down: f32,
@@ -48,9 +50,6 @@ mod path_config_util {
 }
 
 impl MapStage {
-
-    //fn get_start_stop(point: Vec3, range: f32) -> (Vec3, Vec3) {}
-
     pub fn create(config: &MapConfig) -> Self {
         fn get_dir(points: &Vec<PathWayPointData>, idx_a: usize, idx_b: usize) -> (Vec3, (Vec3, f32), (Vec3, f32)) {
             let pa = &points[idx_a];
@@ -70,17 +69,21 @@ impl MapStage {
         }
 
         fn get_line_start_stop(pos: &Vec3, dir: &Vec3, range: &f32) -> (Vec3, Vec3) {
-            let add = dir * range;
-            (pos - add / 2, pos + add / 2)
+            let add = (*dir) * (*range);
+            (*pos - add / 2f32, *pos + add / 2f32)
         }
 
         fn line_space(start: Vec3, stop: Vec3, nstep: u32) -> Vec<Vec3>
         {
+            assert!(nstep > 1, "nstep must big than 1");
             let delta = (stop - start) / ((nstep - 1) as f32);
             return (0..(nstep))
                 .map(|i| start + (i as f32) * delta)
                 .collect();
         }
+
+        let mut path_2_road_map = Vec::new();
+        let mut all_roads = Vec::new();
 
         config.paths.iter().enumerate().for_each(|(path_idx, path)| {
             let mut spawn_lines = Vec::new();
@@ -116,27 +119,21 @@ impl MapStage {
             const PER_PATH_RANGE_DELTA: f32 = 0.25f32;
             let road_count = (max_range / PER_PATH_RANGE_DELTA).ceil() as u32;
 
-            spawn_lines.iter().map(|(pos, dir, len)| {
+            let road_points = spawn_lines.iter().map(|(pos, dir, len)| {
                 let (start, stop) = get_line_start_stop(pos, dir, len);
                 line_space(start, stop, road_count)
-            });
+            }).collect_vec();
+
+            let roads = (0..road_count).map(|i| {
+                let points_row = road_points.iter().map(|col_of_points| {
+                    MapStageRoadPoint { pos: col_of_points[i as usize] }
+                }).collect::<Vec<_>>();
+                MapStageRoad { points: points_row }
+            }).collect_vec();
+
+            path_2_road_map.push(StagePath2RoadMap { start_idx: all_roads.len(), count: roads.len() });
+            all_roads.extend(roads);
         });
-
-        for cp in &config.paths {
-            for t in cp.points.windows(2) {}
-        }
-        let paths = config.paths.iter().map(|path| {
-            let points = path.points.iter().map(|p| {
-                MapStagePathPoint {
-                    pos: path_config_util::to_vec3(p.position.as_ref().unwrap()),
-                    range: p.reach_range,
-                }
-            }).collect::<Vec<_>>();
-
-            MapStagePath {
-                points
-            }
-        }).collect::<Vec<_>>();
 
         let mut waiting_queues = Vec::new();
 
@@ -162,7 +159,8 @@ impl MapStage {
 
         MapStage {
             past_time: 0f32,
-            paths,
+            roads: all_roads,
+            path_2_road: path_2_road_map,
             queues,
             waiting_queues,
             working_queues: Default::default(),
@@ -170,13 +168,17 @@ impl MapStage {
     }
 }
 
-pub struct MapStagePathPoint {
-    pub pos: Vec3,
-    pub range: f32,
+struct StagePath2RoadMap {
+    pub start_idx: usize,
+    pub count: usize,
 }
 
-pub struct MapStagePath {
-    pub points: Vec<MapStagePathPoint>,
+pub struct MapStageRoad {
+    pub points: Vec<MapStageRoadPoint>,
+}
+
+pub struct MapStageRoadPoint {
+    pub pos: Vec3,
 }
 
 #[allow(dead_code)]
@@ -232,7 +234,12 @@ pub fn update_stage_system(mut commands: Commands,
             let waiting_wave = &queue.waves[working.waiting_wave_idx];
             if map_stage.past_time >= waiting_wave.wait_time {
                 //add wave
-                working.working_waves.push(MapStageWorkingWave { wave_idx: working.waiting_wave_idx, work_time: 0f32, spawn_cool_down: 0f32 });
+                working.working_waves.push(MapStageWorkingWave {
+                    spawn_road_idx: 0,
+                    wave_idx: working.waiting_wave_idx,
+                    work_time: 0f32,
+                    spawn_cool_down: 0f32,
+                });
                 working.waiting_wave_idx += 1;
             }
         }
@@ -253,11 +260,12 @@ pub fn update_stage_system(mut commands: Commands,
             if wave.spawn_cool_down <= 0f32 {
                 wave.spawn_cool_down = wave_config.spawn_cool_down;
                 //spawn
-                let path = &config.paths[wave_config.path_index as usize];
-                if path.points.len() == 0 {
-                    panic!("the path {} point is zero", wave_config.path_index);
-                }
-                let first_point = path_config_util::to_vec3(path.points[0].position.as_ref().unwrap());
+                let path_2_road = &map_stage.path_2_road[wave_config.path_index as usize];
+                let road_idx = path_2_road.start_idx + wave.spawn_road_idx;
+                wave.spawn_road_idx = (wave.spawn_road_idx + 1) % path_2_road.count;
+
+                let road = &map_stage.roads[road_idx];
+                let first_point = road.points[0].pos;
                 let monster_config = monster_table.index(wave_config.unit);
 
                 let gltf: Handle<Scene> = asset_server.load(&monster_config.asset);
@@ -267,7 +275,12 @@ pub fn update_stage_system(mut commands: Commands,
                         (
                             Transform::from_translation(pos),
                             GlobalTransform::identity(),
-                            MoveWithMapPath { path_index: wave_config.path_index as usize, target_point_index: 1, speed: monster_config.move_speed },
+                            MoveWithMapPath {
+                                road_index: road_idx as usize,
+                                target_point_index: 1,
+                                speed: monster_config
+                                    .move_speed,
+                            },
                         )
                     ).with_children(|parent| {
                         parent.spawn_scene(gltf.clone());
