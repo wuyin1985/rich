@@ -129,7 +129,7 @@ impl MapStage {
                 point.reach_range.max(ranger_of_points)
             });
 
-            const PER_PATH_RANGE_DELTA: f32 = 1.0f32;
+            const PER_PATH_RANGE_DELTA: f32 = 0.25f32;
             let road_count = (max_range / PER_PATH_RANGE_DELTA).ceil() as u32;
 
             let road_points = spawn_lines.iter().map(|(pos, dir, len)| {
@@ -290,7 +290,7 @@ pub fn update_stage_system(mut commands: Commands,
                 wave.spawn_road_idx = (wave.spawn_road_idx + 1) % path_2_road.count;
 
                 let road = &map_stage.roads[road_idx];
-                let first_point = road.points[0].pos;
+                let first_point = rand_position(&road.points[0].pos, 0.25f32);
                 let monster_config = monster_table.index(wave_config.unit);
 
                 let gltf: Handle<Scene> = asset_server.load(&monster_config.asset);

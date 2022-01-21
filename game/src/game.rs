@@ -53,7 +53,7 @@ impl Plugin for GamePlugin {
 
         #[cfg(feature = "debug")]
             {
-                app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::draw_stage_roads));
+                //app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::draw_stage_roads));
             }
 
         load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
@@ -111,7 +111,7 @@ fn check_load_finish(mut commands: Commands, map: Res<Assets<MapConfigAsset>>,
         }
 
         //light
-        if false
+        //if false
         {
             const HALF_SIZE: f32 = 1.0;
             let light_config = config.light.as_ref().unwrap();
