@@ -31,7 +31,7 @@ pub struct MoveWithMapPath {
 #[derive(Component)]
 pub struct MoveWithPathEnded {}
 
-pub fn move_by_map_path_system(mut commands: Commands,
+pub fn move_by_map_path_system(commands: Commands,
                                pool: Res<ComputeTaskPool>,
                                mut query: Query<(Entity, &mut MoveWithMapPath, &mut Transform), Without<MoveWithPathEnded>>,
                                stage: Res<MapStage>,

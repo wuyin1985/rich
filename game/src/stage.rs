@@ -94,7 +94,7 @@ impl MapStage {
         let mut path_2_road_map = Vec::new();
         let mut all_roads = Vec::new();
 
-        config.paths.iter().enumerate().for_each(|(path_idx, path)| {
+        config.paths.iter().for_each(|path| {
             let mut spawn_lines = Vec::new();
             let point_count = path.points.len();
             if point_count > 1 {
@@ -216,7 +216,7 @@ pub fn init_stage_system(mut commands: Commands, res: Res<Assets<MapConfigAsset>
 
 
 #[cfg(feature = "debug")]
-pub fn draw_stage_roads(mut map_stage: Res<MapStage>, mut lines: ResMut<DebugLines>) {
+pub fn draw_stage_roads(map_stage: Res<MapStage>, mut lines: ResMut<DebugLines>) {
     let map_stage = map_stage.deref();
     for road in &map_stage.roads {
         for t in road.points.windows(2) {

@@ -2,6 +2,7 @@ use bevy::utils::HashMap;
 
 pub trait TableDataItem: serde::de::DeserializeOwned + Send + Sync + 'static {
     fn get_name(&self) -> &str;
+    fn parse(&mut self) {}
 }
 
 pub struct TableData<T> {
@@ -17,7 +18,8 @@ impl<T> TableData<T> where T: TableDataItem {
             }
         };
 
-        let dict = list.into_iter().map(|item| {
+        let dict = list.into_iter().map(|mut item| {
+            item.parse();
             let name = item.get_name();
             let id = hashtoollib::hash(name);
             (id, item)
