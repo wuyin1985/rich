@@ -19,9 +19,9 @@ impl<T> TableData<T> where T: TableDataItem {
         };
 
         let dict = list.into_iter().map(|mut item| {
-            item.parse();
             let name = item.get_name();
             let id = hashtoollib::hash(name);
+            item.parse();
             (id, item)
         }).collect::<HashMap<_, _>>();
 

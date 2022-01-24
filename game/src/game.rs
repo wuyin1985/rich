@@ -1,6 +1,7 @@
 ﻿use bevy::app::Plugin;
 use bevy::prelude::*;
 use std::ops::Deref;
+use bevy::tasks::AsyncComputeTaskPool;
 use bevy_prototype_debug_lines::DebugLinesPlugin;
 use crate::{monster, stage};
 use crate::attacker::AttackerConfig;
@@ -11,7 +12,7 @@ use crate::prelude::App;
 use crate::table::{TableData, TableDataItem};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
-enum GameState {
+pub enum GameState {
     Loading,
     Playing,
     #[allow(dead_code)]
@@ -65,7 +66,7 @@ fn load_table<T>(app: &mut App, path: &str) where T: TableDataItem {
     app.insert_resource(TableData::<T>::load_from_file(path));
 }
 
-fn start_load(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn start_load(mut commands: Commands, asset_server: Res<AssetServer>, thread_pool: Res<AsyncComputeTaskPool>) {
     let handle: Handle<MapConfigAsset> = asset_server.load("config/map/Map_pb.map");
     commands.insert_resource(handle);
 

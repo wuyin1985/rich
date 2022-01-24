@@ -14,7 +14,8 @@ members = [
     "editor",
     "tool/hashtool",
     "tool/hashtoolbin",
-    "third/bevy_prototype_debug_lines"
+    "third/bevy_prototype_debug_lines",
+    "third/bvh",
 ]
 
 [features]

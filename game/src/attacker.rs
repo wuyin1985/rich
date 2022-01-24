@@ -4,7 +4,7 @@ use crate::StringId;
 use crate::table::TableData;
 use super::table::TableDataItem;
 
-#[derive(serde::Deserialize, serde::Serialize, TypeUuid, Component)]
+#[derive(serde::Deserialize, serde::Serialize, TypeUuid)]
 #[uuid = "9a852db2-3eb7-4c91-99ae-ec1ea92f2877"]
 pub struct AttackerConfig {
     pub abilities: Vec<AbilityConfig>,

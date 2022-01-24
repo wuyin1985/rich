@@ -11,6 +11,7 @@ mod table;
 mod node;
 mod force;
 mod sfx;
+mod hit_query;
 
 pub mod prelude {
     pub use bevy::prelude::*;
@@ -57,5 +58,33 @@ impl StringId {
                 *id
             }
         }
+    }
+
+    pub fn str(&self) -> &str {
+        match self {
+            StringId::Str(s) => {
+                s.as_str()
+            }
+            StringId::Id(id) => {
+                panic!("the string has not convert into id yet");
+            }
+        }
+    }
+}
+
+pub trait StringIdOptionCopy {
+    fn as_id(&self) -> Option<u64>;
+    fn change_2_id(&mut self);
+}
+
+impl StringIdOptionCopy for Option<StringId> {
+    fn as_id(&self) -> Option<u64> {
+        self.as_ref().map(|r| {
+            r.id()
+        })
+    }
+
+    fn change_2_id(&mut self) {
+        self.as_mut().map(|ss| ss.change_2_id());
     }
 }

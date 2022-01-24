@@ -13,8 +13,10 @@ serde = "1.0"
 rand = "0.8"
 itertools = "0.10.3"
 ron = { version = "0.7.0" }
+bvh = { path = "../third/bvh" }
 hashtool = { path = "../tool/hashtool", default-features = false }
 bevy_prototype_debug_lines = { path = "../third/bevy_prototype_debug_lines", features = ["3d"], optional = true }
+futures-lite = "1.12.0"
 
 
 [build-dependencies]
