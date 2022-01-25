@@ -43,6 +43,17 @@ pub struct HitResult {
     node_index: usize,
 }
 
+impl HitResult {
+    pub fn create_with_entity(entity: Entity) -> Self {
+        HitResult {
+            entity,
+            radius: Default::default(),
+            position: Default::default(),
+            node_index: Default::default(),
+        }
+    }
+}
+
 
 impl Bounded for HitResult {
     fn aabb(&self) -> AABB {

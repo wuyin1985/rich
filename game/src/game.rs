@@ -45,9 +45,9 @@ impl Plugin for GamePlugin {
             .add_system_set(SystemSet::on_update(GameState::Loading).with_system(check_load_finish))
 
             .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(stage::init_stage_system))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::update_stage_system))
-            .add_system_set(SystemSet::on_update(GameState::Playing).with_system(monster::move_by_map_path_system))
-
+            .add_system_set(SystemSet::on_update(GameState::Playing)
+                .with_system(stage::update_stage_system)
+                .with_system(monster::move_by_map_path_system))
             .add_system(bevy::input::system::exit_on_esc_system)
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();

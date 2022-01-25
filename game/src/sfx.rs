@@ -22,7 +22,7 @@ impl TableDataItem for SfxGroupConfig {
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
 pub enum SfxVisualType {
-    Default,
+    Normal,
     Range,
     Chain,
 }

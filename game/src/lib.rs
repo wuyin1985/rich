@@ -12,6 +12,8 @@ mod node;
 mod force;
 mod sfx;
 mod hit_query;
+mod attrs;
+mod death;
 
 pub mod prelude {
     pub use bevy::prelude::*;

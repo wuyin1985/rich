@@ -1,10 +1,11 @@
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use bvh::aabb::AABB;
 use bvh::ray::Ray;
 use bvh::Vector3;
 use crate::hit_query::{HitQuery, HitResult};
 use crate::prelude::*;
 use crate::{StringId, StringIdOptionCopy};
+use crate::attrs::{AttrCommand, AttrCommandQueue};
 use crate::table::{TableData, TableDataItem};
 
 #[derive(Clone, Copy)]
@@ -106,9 +107,11 @@ fn update_force_immediate(mut commands: Commands,
                           mut query: Query<(Entity, &Force, &ForceTarget, &mut Transform), With<ForceMoveImmediate>>,
                           global_transform_query: Query<&GlobalTransform>,
                           hit_query: Res<HitQuery>,
+                          attr_commands: Res<AttrCommandQueue>,
 ) {
     let bvh = hit_query.deref();
-    for (entity, force, target, transform) in query.iter_mut() {
+    for (entity, force, target, mut transform) in query.iter_mut() {
+        let transform = transform.deref_mut();
         let target_pos = match target {
             ForceTarget::Entity(e) => {
                 let p = global_transform_query.get(*e).expect(format!("failed to find global transform for entity {:?}", e).as_str());
@@ -122,10 +125,7 @@ fn update_force_immediate(mut commands: Commands,
         let start_pos = transform.translation;
         transform.translation = target_pos;
 
-        let target_as_result = HitResult {
-            entity,
-            ..Default::default()
-        };
+        let target_as_result = HitResult::create_with_entity(entity);
 
         let result_list = match force.select {
             HitTargetSelect::Target => {
@@ -138,12 +138,17 @@ fn update_force_immediate(mut commands: Commands,
                 bvh.traverse_aabb(&AABB { min: ld, max: ru })
             }
 
+            //todo impl len
             HitTargetSelect::RayFromStart(len) => {
                 let dir = (transform.translation - start_pos);
                 bvh.traverse(&Ray::new(start_pos, dir))
             }
         };
 
-
+        for ret in result_list {
+            attr_commands.push(AttrCommand::Add(
+                ret.entity, 0, -1f32,
+            ))
+        }
     }
 }
