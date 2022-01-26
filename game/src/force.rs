@@ -16,14 +16,12 @@ pub enum HitTargetSelect {
     RayFromStart(f32),
 }
 
-
 #[derive(Clone, Copy)]
 #[derive(serde::Deserialize, serde::Serialize)]
 pub enum Movement {
     Immediate,
     Line(f32),
 }
-
 
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct ForceConfig {

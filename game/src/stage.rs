@@ -7,7 +7,6 @@ use crate::monster::{MonsterConfig, MoveWithMapPath};
 use crate::proto::PathEditor::{MapConfig, PathWayPointData};
 use crate::rand_position;
 use crate::table::TableData;
-use bevy_prototype_debug_lines::*;
 
 pub struct MapStage {
     pub roads: Vec<MapStageRoad>,
@@ -216,7 +215,7 @@ pub fn init_stage_system(mut commands: Commands, res: Res<Assets<MapConfigAsset>
 
 
 #[cfg(feature = "debug")]
-pub fn draw_stage_roads(map_stage: Res<MapStage>, mut lines: ResMut<DebugLines>) {
+pub fn draw_stage_roads(map_stage: Res<MapStage>, mut lines: ResMut<bevy_prototype_debug_lines::DebugLines>) {
     let map_stage = map_stage.deref();
     for road in &map_stage.roads {
         for t in road.points.windows(2) {

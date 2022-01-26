@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use bevy::reflect::TypeUuid;
 use bevy::tasks::ComputeTaskPool;
 use serde::{Serialize, Deserialize};
+use crate::attrs::AttrsConfig;
 use crate::stage::MapStage;
 use crate::table::TableDataItem;
 
@@ -13,11 +14,16 @@ pub struct MonsterConfig {
     pub name: String,
     pub move_speed: f32,
     pub asset: String,
+    pub attrs: AttrsConfig,
 }
 
 impl TableDataItem for MonsterConfig {
     fn get_name(&self) -> &str {
         &self.name
+    }
+
+    fn parse(&mut self) {
+        self.attrs.parse();
     }
 }
 
@@ -36,7 +42,6 @@ pub fn move_by_map_path_system(commands: Commands,
                                mut query: Query<(Entity, &mut MoveWithMapPath, &mut Transform), Without<MoveWithPathEnded>>,
                                stage: Res<MapStage>,
                                time: Res<Time>) {
-
     let delta = time.delta_seconds();
     let stage = stage.deref();
     let cs = Mutex::new(commands);

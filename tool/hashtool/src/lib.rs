@@ -72,6 +72,27 @@ pub fn load_reverse_dict(path: &str) {
     }
 }
 
+#[cfg(feature = "save_reverse_hash")]
+pub fn save_reverse_dict(path: &str) {
+    unsafe {
+        if TOOL.is_none() {
+            TOOL = Some(HashTool::new());
+        }
+        TOOL.as_mut().unwrap().save_reverse_dict_2_file(path);
+    }
+}
+
+#[cfg(feature = "save_reverse_hash")]
+pub fn get_reverse_dict() -> HashMap<u64, String> {
+    unsafe {
+        if TOOL.is_none() {
+            panic!("TOOL is not created")
+        }
+        let t = TOOL.as_mut().unwrap().reverse_dict.lock().unwrap();
+        t.clone()
+    }
+}
+
 pub struct HashTool {
     #[cfg(feature = "save_reverse_hash")]
     pub reverse_dict: Mutex<HashMap<u64, String>>,

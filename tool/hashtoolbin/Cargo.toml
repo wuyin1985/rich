@@ -4,4 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-hashtool = { path = "../hashtool" }
+hashtool = { path = "../hashtool", features = ["save_reverse_hash"] }
+clap = { version = "3.0.12", features = ["derive"] }
+game = { path = "../../game" }
+anyhow = "1.0.52"

@@ -2,7 +2,6 @@
 use bevy::prelude::*;
 use std::ops::Deref;
 use bevy::tasks::AsyncComputeTaskPool;
-use bevy_prototype_debug_lines::DebugLinesPlugin;
 use crate::{monster, stage};
 use crate::attacker::AttackerConfig;
 use crate::camera::LookTransformPlugin;
@@ -37,7 +36,6 @@ impl Plugin for GamePlugin {
                 ..Default::default()
             })
             .add_plugins(DefaultPlugins)
-            .add_plugin(DebugLinesPlugin::default())
             .add_plugin(LookTransformPlugin)
 
             .add_state(GameState::Loading)
@@ -54,12 +52,15 @@ impl Plugin for GamePlugin {
 
         #[cfg(feature = "debug")]
             {
+                app.add_plugin(bevy_prototype_debug_lines::DebugLinesPlugin::default());
                 //app.add_system_set(SystemSet::on_update(GameState::Playing).with_system(stage::draw_stage_roads));
             }
-
-        load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
-        load_table::<MonsterConfig>(app, "assets/config/ron/monster.ron");
     }
+}
+
+pub fn load_battle_tables(app: &mut App) {
+    load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
+    load_table::<MonsterConfig>(app, "assets/config/ron/monster.ron");
 }
 
 fn load_table<T>(app: &mut App, path: &str) where T: TableDataItem {

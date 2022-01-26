@@ -2,6 +2,13 @@
     (
         name : "goblin",
         move_speed: 1,
-        asset: "gltf/CesiumMan.glb#Scene0"
+        asset: "gltf/CesiumMan.glb#Scene0",
+        attrs: (
+            values: [
+                (name: Str("hp"), init:100, max:Some(Str("hp_max"))),
+                (name: Str("hp_max"), init:100, max:None),
+                (name: Str("speed"), init:1, max:None),
+            ]
+        )
     )
 ]

@@ -14,12 +14,15 @@ mod sfx;
 mod hit_query;
 mod attrs;
 mod death;
+mod str_gen;
 
 pub mod prelude {
     pub use bevy::prelude::*;
+    pub use crate::{StringId, StringIdOptionCopy};
 }
 
 pub use game::GamePlugin;
+pub use game::load_battle_tables;
 
 use rand::Rng;
 use crate::prelude::Vec3;
