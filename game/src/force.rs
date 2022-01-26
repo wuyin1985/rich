@@ -1,11 +1,14 @@
 use std::ops::{Deref, DerefMut};
+use itertools::Itertools;
 use bvh::aabb::AABB;
 use bvh::ray::Ray;
 use bvh::Vector3;
 use crate::hit_query::{HitQuery, HitResult};
 use crate::prelude::*;
-use crate::{StringId, StringIdOptionCopy};
+use crate::{effect, StringId, StringIdOptionCopy};
 use crate::attrs::{AttrCommand, AttrCommandQueue};
+use crate::effect::EffectCommand;
+use crate::game::GameState;
 use crate::table::{TableData, TableDataItem};
 
 #[derive(Clone, Copy)]
@@ -31,6 +34,7 @@ pub struct ForceConfig {
     pub self_sfx: Option<StringId>,
     pub fire_sfx: Option<StringId>,
     pub hit_sfx: Option<StringId>,
+    pub effect: StringId,
 }
 
 impl TableDataItem for ForceConfig {
@@ -43,6 +47,7 @@ impl TableDataItem for ForceConfig {
         self.self_sfx.change_2_id();
         self.fire_sfx.change_2_id();
         self.hit_sfx.change_2_id();
+        self.effect.change_2_id();
     }
 }
 
@@ -63,6 +68,7 @@ struct Force {
     pub self_sfx: Option<u64>,
     pub fire_sfx: Option<u64>,
     pub hit_sfx: Option<u64>,
+    pub effect: u64,
 }
 
 #[derive(Component)]
@@ -71,6 +77,16 @@ struct ForceMoveImmediate {}
 #[derive(Component)]
 struct ForceMoveLine {
     speed: f32,
+}
+
+pub struct ForcePlugin;
+
+impl Plugin for ForcePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(SystemSet::on_update(GameState::Playing)
+            .with_system(create_force_system)
+            .with_system(update_force_immediate.chain(effect::handle_effect_system)));
+    }
 }
 
 fn create_force_system(
@@ -87,6 +103,7 @@ fn create_force_system(
                 hit_sfx: config.hit_sfx.as_id(),
                 fire_sfx: config.fire_sfx.as_id(),
                 self_sfx: config.self_sfx.as_id(),
+                effect: config.effect.id(),
             }
         );
 
@@ -105,9 +122,9 @@ fn update_force_immediate(mut commands: Commands,
                           mut query: Query<(Entity, &Force, &ForceTarget, &mut Transform), With<ForceMoveImmediate>>,
                           global_transform_query: Query<&GlobalTransform>,
                           hit_query: Res<HitQuery>,
-                          attr_commands: Res<AttrCommandQueue>,
-) {
+) -> Vec<EffectCommand> {
     let bvh = hit_query.deref();
+    let mut cmds = Vec::new();
     for (entity, force, target, mut transform) in query.iter_mut() {
         let transform = transform.deref_mut();
         let target_pos = match target {
@@ -143,10 +160,10 @@ fn update_force_immediate(mut commands: Commands,
             }
         };
 
-        for ret in result_list {
-            attr_commands.push(AttrCommand::Add(
-                ret.entity, 0, -1f32,
-            ))
-        }
+        cmds.extend(result_list.into_iter().map(|hr| {
+            EffectCommand { target: hr.entity, id: force.effect }
+        }));
     }
+
+    cmds
 }

@@ -64,7 +64,7 @@ impl AttrCommandQueue {
     }
 }
 
-pub struct AttrPlugin {}
+pub struct AttrPlugin;
 
 impl Plugin for AttrPlugin {
     fn build(&self, app: &mut App) {

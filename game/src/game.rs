@@ -4,7 +4,11 @@ use std::ops::Deref;
 use bevy::tasks::AsyncComputeTaskPool;
 use crate::{monster, stage};
 use crate::attacker::AttackerConfig;
+use crate::attrs::AttrPlugin;
 use crate::camera::LookTransformPlugin;
+use crate::effect::EffectsConfig;
+use crate::force::{ForceConfig, ForcePlugin};
+use crate::hit_query::HitQueryPlugin;
 use crate::map::{MapConfigAsset, MapConfigAssetLoader};
 use crate::monster::MonsterConfig;
 use crate::prelude::App;
@@ -37,6 +41,9 @@ impl Plugin for GamePlugin {
             })
             .add_plugins(DefaultPlugins)
             .add_plugin(LookTransformPlugin)
+            .add_plugin(AttrPlugin)
+            .add_plugin(HitQueryPlugin)
+            .add_plugin(ForcePlugin)
 
             .add_state(GameState::Loading)
             .add_system_set(SystemSet::on_enter(GameState::Loading).with_system(start_load))
@@ -50,6 +57,8 @@ impl Plugin for GamePlugin {
             .init_asset_loader::<MapConfigAssetLoader>()
             .add_asset::<MapConfigAsset>();
 
+        load_battle_tables(app);
+
         #[cfg(feature = "debug")]
             {
                 app.add_plugin(bevy_prototype_debug_lines::DebugLinesPlugin::default());
@@ -61,6 +70,8 @@ impl Plugin for GamePlugin {
 pub fn load_battle_tables(app: &mut App) {
     load_table::<AttackerConfig>(app, "assets/config/ron/attacker.ron");
     load_table::<MonsterConfig>(app, "assets/config/ron/monster.ron");
+    load_table::<EffectsConfig>(app, "assets/config/ron/effect.ron");
+    load_table::<ForceConfig>(app, "assets/config/ron/force.ron");
 }
 
 fn load_table<T>(app: &mut App, path: &str) where T: TableDataItem {

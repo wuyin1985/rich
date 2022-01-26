@@ -1,6 +1,8 @@
 ﻿use bevy::prelude::*;
 use std::ops::{Deref, DerefMut};
 use itertools::Itertools;
+use crate::attrs::Attrs;
+use crate::hit_query::HitBounds;
 
 use crate::map::MapConfigAsset;
 use crate::monster::{MonsterConfig, MoveWithMapPath};
@@ -305,6 +307,8 @@ pub fn update_stage_system(mut commands: Commands,
                                 speed: monster_config
                                     .move_speed,
                             },
+                            HitBounds::create(0.2f32),
+                            Attrs::load_from_config(&monster_config.attrs),
                         )
                     ).with_children(|parent| {
                         parent.spawn_scene(gltf.clone());

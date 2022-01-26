@@ -398,7 +398,6 @@ impl BVHNode {
     }
 
 
-
     /// Traverses the [`BVH`] recursively and returns all shapes whose [`AABB`] is
     /// intersected by the given [`AABB`].
     pub fn traverse_aabb_recursive(
@@ -407,7 +406,6 @@ impl BVHNode {
         aabb: &AABB,
         indices: &mut Vec<usize>,
     ) {
-
         fn is_aabb_intersect(a: &AABB, b: &AABB) -> bool {
             return (a.min.x <= b.max.x && a.max.x >= b.min.x) &&
                 (a.min.y <= b.max.y && a.max.y >= b.min.y) &&
@@ -458,11 +456,15 @@ impl BVH {
     /// [`BVH`]: struct.BVH.html
     ///
     pub fn build<Shape: BHShape>(shapes: &mut [Shape]) -> BVH {
-        let indices = (0..shapes.len()).collect::<Vec<usize>>();
-        let expected_node_count = shapes.len() * 2;
-        let mut nodes = Vec::with_capacity(expected_node_count);
-        BVHNode::build(shapes, &indices, &mut nodes, 0, 0);
-        BVH { nodes }
+        if shapes.len() == 0 {
+            BVH { nodes: Vec::new() }
+        } else {
+            let indices = (0..shapes.len()).collect::<Vec<usize>>();
+            let expected_node_count = shapes.len() * 2;
+            let mut nodes = Vec::with_capacity(expected_node_count);
+            BVHNode::build(shapes, &indices, &mut nodes, 0, 0);
+            BVH { nodes }
+        }
     }
 
     /// Traverses the [`BVH`].

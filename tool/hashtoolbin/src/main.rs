@@ -19,7 +19,7 @@ fn save_dict_2_rust_file(map: HashMap<u64, String>) -> Result<()> {
     f.write_all(b"use std::collections::HashMap;\n")?;
     f.write_all(b"\n")?;
     for (k, v) in map {
-        let word = format!("const {}:u64 = {};\n", v, k);
+        let word = format!("pub const {}:u64 = {};\n", v, k);
         f.write_all(word.as_bytes())?;
     }
 

@@ -14,6 +14,12 @@ pub struct HitBounds {
     radius: f32,
 }
 
+impl HitBounds {
+    pub fn create(radius: f32) -> Self {
+        HitBounds { radius }
+    }
+}
+
 pub struct HitQuery {
     bvh: Option<BvhBundle>,
     task: Option<Task<BvhBundle>>,
@@ -74,7 +80,7 @@ impl BHShape for HitResult {
     }
 }
 
-pub struct HitQueryPlugin {}
+pub struct HitQueryPlugin;
 
 impl Plugin for HitQueryPlugin {
     fn build(&self, app: &mut App) {
@@ -84,12 +90,14 @@ impl Plugin for HitQueryPlugin {
                 task: None,
             }
         )
-            .add_system_set_to_stage(CoreStage::PreUpdate,
+
+            //change to pre update remove after bug:https://github.com/bevyengine/bevy/issues/1671 fix
+            .add_system_set_to_stage(CoreStage::Update,
                                      SystemSet::on_update(GameState::Playing).
-                                         with_system(prepare_bvh_tree_system))
-            .add_system_set_to_stage(CoreStage::PostUpdate,
-                                     SystemSet::on_update(GameState::Playing).
-                                         with_system(build_bvh_tree_system));
+                                         with_system(prepare_bvh_tree_system));
+        // .add_system_set_to_stage(CoreStage::PostUpdate,
+        //                          SystemSet::on_update(GameState::Playing).
+        //                              with_system(build_bvh_tree_system));
     }
 }
 

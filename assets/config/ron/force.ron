@@ -1,0 +1,8 @@
+[
+    (
+        name : Str("cross_bullet"),
+        select : RayFromStart(10),
+        movement: Immediate,
+        effect: Str("cross_bullet_hurt"),
+    )
+]

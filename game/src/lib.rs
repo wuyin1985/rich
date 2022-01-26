@@ -14,11 +14,13 @@ mod sfx;
 mod hit_query;
 mod attrs;
 mod death;
-mod str_gen;
+pub mod str_gen;
+mod destroy;
+mod effect;
 
 pub mod prelude {
     pub use bevy::prelude::*;
-    pub use crate::{StringId, StringIdOptionCopy};
+    pub use crate::{StringId, StringIdOptionCopy, str_gen};
 }
 
 pub use game::GamePlugin;
